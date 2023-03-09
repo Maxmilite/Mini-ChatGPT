@@ -40,7 +40,7 @@ const MessageTemplate = {
 }
 
 const messageList = ref([
-  { id: 1, message: "I\'m a robot. You can talk with me freely now." },
+  { id: 1, message: "I\'m a robot. You can chat with me freely now." },
 ]);
 
 const props = defineProps({
@@ -59,18 +59,8 @@ async function submit() {
   let submitButton = document.getElementById("submit-button");
   if (submitButton === null)
     return;
-  let elementPointer = document.getElementsByClassName("search-bar")[0];
-  if (elementPointer === null)
-    return;
-  if (elementPointer.firstElementChild === null)
-    return;
-  elementPointer = elementPointer.firstElementChild;
-  if (elementPointer.firstElementChild === null)
-    return;
-  elementPointer = elementPointer.firstElementChild;
-  if (!(elementPointer instanceof HTMLTextAreaElement))
-    return;
-  let message = elementPointer.value;
+  let message = search_state.value;
+  search_state.value = "";
 
 
   if (!message) {
@@ -78,10 +68,8 @@ async function submit() {
     return;
   }
 
-  elementPointer.value = "";
-  submitLoading.value = true;
-
   messageList.value.push({ id: 0, message: message });
+  submitLoading.value = true;
   updateChatBoxHeight();
 
   let response = await props.submitFunction(message);
@@ -120,7 +108,7 @@ onMounted(() => {
         <el-col :span="16">
           <el-autocomplete style="margin: 0 0;" v-model="search_state" :fetch-suggestions="querySearch" clearable
             type="textarea" :autosize="{ minRows: 1, maxRows: 3 }" class="inline-input search-bar w-50vw" size="large"
-            placeholder="Input your answer" :disabled="submitLoading" @keyup.ctrl.enter="submit" />
+            placeholder="Type any words freely. Use Ctrl + Enter to submit." :disabled="submitLoading" @keyup.ctrl.enter="submit" />
         </el-col>
         <el-col :span="8">
           <el-button id="submit-button" :loading="submitLoading" style="margin: 0 0;" type="primary"  plain

@@ -1,0 +1,18 @@
+# Message
+
+id: [ MessageId, INT UNSIGNED AUTO_INCREMENT ]
+question: [ Question, MEDIUMTEXT NOT NULL ]
+answer: [ Answer, MEDIUMTEXT NOT NULL ]
+
+create table if not exists `message_table` (
+`id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+`question` MEDIUMTEXT NOT NULL,
+`answer` MEDIUMTEXT NOT NULL,
+PRIMARY KEY ( `id` )
+)ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+INSERT INTO user 
+(host, user, password, 
+select_priv, insert_priv, update_priv) 
+VALUES ('localhost', 'guest', 
+PASSWORD('dnf@#YU328!4#NYVJ'), 'Y', 'Y', 'Y');

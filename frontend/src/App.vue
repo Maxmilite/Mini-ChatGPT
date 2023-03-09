@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import { ElMessage, messageEmits } from 'element-plus'
 
+const serverAddress = "http://localhost:5000"
 const state = ref(0);
 
 function stateHandler(e: number) {
@@ -14,8 +15,16 @@ function stateHandler(e: number) {
 const sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay));
 
 async function submitMessage(message: string) {
-  await sleep(2000);
-  return "是的，" + message.replace("吗", "") + "。";
+  let returnMessage = "";
+  let HTTPRequest = new XMLHttpRequest();
+  HTTPRequest.open("GET", serverAddress + "/message?message=" + message, false);
+  try {
+    HTTPRequest.send();
+    returnMessage = HTTPRequest.responseText;
+    return returnMessage;
+  } catch (error) {
+    return "An error occurred while corresponding with the chatbot."
+  }
 }
 
 </script>
@@ -27,7 +36,7 @@ async function submitMessage(message: string) {
       <BaseSide @response="(e) => stateHandler(e)" :state="state" />
       <div style="width: 100%; height: calc(100vh - 60px);">
         <Welcome v-if="state == 0" @response="(e) => stateHandler(e)" msg="Mini ChatGPT" />
-        <ChatSession v-else :submit-function="submitMessage"/>
+        <ChatSession v-else :submit-function="submitMessage" />
       </div>
     </div>
   </el-config-provider>
@@ -43,4 +52,3 @@ async function submitMessage(message: string) {
   width: 50%;
 }
 </style>
-  
