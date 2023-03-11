@@ -11,7 +11,9 @@ declare module '@vue/runtime-core' {
   export interface GlobalComponents {
     BaseHeader: typeof import('./components/layouts/BaseHeader.vue')['default']
     BaseSide: typeof import('./components/layouts/BaseSide.vue')['default']
+    ChatHistory: typeof import('./components/ChatHistory.vue')['default']
     ChatSession: typeof import('./components/ChatSession.vue')['default']
+    copy: typeof import('./components/HotSpot copy.vue')['default']
     Copy: typeof import('./components/Welcome - Copy.vue')['default']
     ElAutocomplete: typeof import('element-plus/es')['ElAutocomplete']
     ElButton: typeof import('element-plus/es')['ElButton']
@@ -40,6 +42,7 @@ declare module '@vue/runtime-core' {
     ElTable: typeof import('element-plus/es')['ElTable']
     ElTableColumn: typeof import('element-plus/es')['ElTableColumn']
     ElTag: typeof import('element-plus/es')['ElTag']
+    History: typeof import('./components/History.vue')['default']
     HotSpot: typeof import('./components/HotSpot.vue')['default']
     Welcome: typeof import('./components/Welcome.vue')['default']
   }

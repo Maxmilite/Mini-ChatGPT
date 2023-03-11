@@ -67,6 +67,7 @@ def updatePopularity(message):
                    str(val) + "\' WHERE (`id` = \'" + str(id) + "\')")
     db.commit()
 
+
 def getUserPassword(username):
     cursor.execute(
         "SELECT password FROM `userdata`.`user_pass` WHERE username=\"" + username + "\"")
@@ -76,11 +77,25 @@ def getUserPassword(username):
     else:
         return res[0]
 
+
 def createUser(username, password):
     cursor.execute(
         "INSERT INTO `userdata`.`user_pass` (`username`, `password`) VALUES ('%s', '%s')" % (username, password))
     db.commit()
-    
+
+
+def getUserID(username):
+    cursor.execute(
+        "SELECT id FROM `userdata`.`user_pass` WHERE username=\"" + username + "\"")
+    res = cursor.fetchone()
+    return res[0]
+
+
+def storeMessage(userID, messageSent, messageReceived):
+    cursor.execute(
+        "INSERT INTO `userdata`.`chat_history` (`sender`, `message_sent`, `message_received`, `category`) VALUES ('%s', '%s', '%s', '%s')" % (userID, messageSent, messageReceived, "Default"))
+    db.commit()
+
 
 # API
 
@@ -106,6 +121,7 @@ def getMessage():
     currentConnection -= 1
     if (data != None):
         updatePopularity(message)
+        storeMessage(getUserID(session.get("username")), message, data[0])
         return data[0]
     else:
         return unknownMessage
@@ -113,6 +129,8 @@ def getMessage():
 
 @app.route('/api/autocomplete', methods=['GET'])
 def getACList():
+    if not (session.get("username")):
+        flask.abort(401)
     cursor.execute(
         "SELECT question FROM message_table")
     data = cursor.fetchall()
@@ -125,6 +143,54 @@ def getHotSpot():
         "SELECT question,answer,popularity FROM message_table ORDER BY popularity DESC")
     data = cursor.fetchall()
     return jsonify([{"question": i[0], "answer": i[1], "popularity": i[2], "rank": data.index(i) + 1} for i in data])
+
+
+@app.route('/api/history/get', methods=['GET'])
+def getChatHistory():
+    if not (session.get("username")):
+        flask.abort(401)
+    userID = getUserID(session.get("username"))
+    category = request.args.get('category', '')
+    if not category:
+        cursor.execute(
+            "SELECT date,message_sent,message_received,category,id FROM `userdata`.`chat_history` WHERE `sender`=\'%s\'" % userID)
+        data = cursor.fetchall()
+        return jsonify([{"date": i[0], "question": i[1], "answer": i[2], "category": i[3], "id": i[4]} for i in data])
+    else:
+        cursor.execute(
+            "SELECT date,message_sent,message_received,category,id FROM `userdata`.`chat_history` WHERE `sender`=\'%s\' AND `category`=\'%s\'" % (userID, category))
+        data = cursor.fetchall()
+        return jsonify([{"date": i[0], "question": i[1], "answer": i[2], "category": i[3], "id": i[4]} for i in data])
+
+
+@app.route('/api/history/set', methods=['POST'])
+def setChatHistory():
+    if not (session.get("username")):
+        flask.abort(401)
+    try:
+        setJson = request.get_json()
+    except Exception:
+        setJson = {}
+    if not setJson:
+        setJson = {}
+    id = setJson.get("id")
+    category = setJson.get("category")
+    cursor.execute(
+        "UPDATE `userdata`.`chat_history` SET `category` = '%s' WHERE (`id` = '%s')" % (category, id))
+    db.commit()
+    return jsonify(code=200, msg="Success")
+
+
+@app.route('/api/history/categories', methods=['GET'])
+def getHistoryCategories():
+    if not (session.get("username")):
+        flask.abort(401)
+    userID = getUserID(session.get("username"))
+    cursor.execute(
+        "SELECT DISTINCT category FROM `userdata`.`chat_history` WHERE `sender`=\'%s\'" % userID)
+    data = cursor.fetchall()
+    return jsonify([i[0] for i in data])
+
 
 @app.route('/api/login', methods=['POST'])
 def login():
@@ -161,6 +227,8 @@ def check_session():
 
 @app.route("/api/logout")
 def logout():
+    if not (session.get("username")):
+        flask.abort(401)
     session.clear()
     return jsonify(code=200, msg="Success")
 

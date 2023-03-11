@@ -65,8 +65,7 @@ const logout = () => {
       </template>
       <el-menu-item-group>
         <template #title><span>History</span></template>
-        <el-menu-item index="4-1">Latest History</el-menu-item>
-        <el-menu-item index="4-2">Find History Message</el-menu-item>
+        <el-menu-item index="4-1" @click="exit(3)">View History</el-menu-item>
       </el-menu-item-group>
       <el-menu-item-group>
         <template #title><span>Hotspot</span></template>

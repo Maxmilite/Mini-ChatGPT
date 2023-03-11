@@ -2,6 +2,8 @@
 import { onMounted, ref } from "vue";
 import { ElMessage, messageEmits } from 'element-plus'
 import { stringify } from "querystring";
+import { add } from "lodash";
+import {} from '@element-plus/icons-vue';
 
 const serverAddress = "http://127.0.0.1:5173/api"
 const state = ref(0);
@@ -12,7 +14,7 @@ function stateHandler(e: number) {
   state.value = -1;
   setTimeout(() => {
     state.value = e;
-    if (e == 1 && !loggedIn.value) {
+    if ((e == 1 || e == 3) && !loggedIn.value) {
       state.value = 0;
       ElMessage.error("You need to sign in before using Mini-ChatGPT.")
     }
@@ -20,6 +22,7 @@ function stateHandler(e: number) {
 }
 
 const sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay));
+const queryCategory = ref("");
 
 async function submitMessage(message: string, callback: Function) {
   let returnMessage = "";
@@ -45,19 +48,6 @@ function getACList() {
   let returnMessage = "";
   let HTTPRequest = new XMLHttpRequest();
   HTTPRequest.open("GET", serverAddress + "/api/autocomplete", false);
-  try {
-    HTTPRequest.send();
-    returnMessage = HTTPRequest.responseText;
-    return JSON.parse(returnMessage);
-  } catch (error) {
-    return "An error occurred while corresponding with the chatbot."
-  }
-}
-
-function getHotSpot() {
-  let returnMessage = "";
-  let HTTPRequest = new XMLHttpRequest();
-  HTTPRequest.open("GET", serverAddress + "/api/hotspot", false);
   try {
     HTTPRequest.send();
     returnMessage = HTTPRequest.responseText;
@@ -124,6 +114,75 @@ function getSession() {
   }
 }
 
+function getHotSpot() {
+  let returnMessage = "";
+  let HTTPRequest = new XMLHttpRequest();
+  HTTPRequest.open("GET", serverAddress + "/api/hotspot", false);
+  try {
+    HTTPRequest.send();
+    returnMessage = HTTPRequest.responseText;
+    return JSON.parse(returnMessage);
+  } catch (error) {
+    return "An error occurred while corresponding with the chatbot."
+  }
+}
+
+function setCategory(id: number, category: string) {
+  let HTTPRequest = new XMLHttpRequest();
+  HTTPRequest.open("POST", serverAddress + "/api/history/set", false);
+  HTTPRequest.withCredentials = true;
+  HTTPRequest.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+  try {
+    HTTPRequest.send(JSON.stringify({ "id": id, "category": category }));
+    let returnMessage = JSON.parse(HTTPRequest.responseText);
+    if (returnMessage.code == 200) {
+      ElMessage.success("Success");
+      return 1;
+    } else {
+      ElMessage.error("Error: " + returnMessage.msg);
+      return 0;
+    }
+  } catch (error) {
+    ElMessage.error("Error: Network Error");
+    return 0;
+  }
+}
+
+function getHistory(category: string) {
+  let returnMessage = "";
+  let HTTPRequest = new XMLHttpRequest();
+  let address = "/api/history/get?username=" + userName.value;
+  if (category) {
+    address += "&category=" + category;
+  }
+  HTTPRequest.open("GET", serverAddress + address, false);
+  try {
+    HTTPRequest.send();
+    returnMessage = HTTPRequest.responseText;
+    return JSON.parse(returnMessage);
+  } catch (error) {
+    return "An error occurred while corresponding with the chatbot."
+  }
+}
+
+function getCategories() {
+  let returnMessage = "";
+  let HTTPRequest = new XMLHttpRequest();
+  let address = "/api/history/categories";
+  HTTPRequest.open("GET", serverAddress + address, false);
+  try {
+    HTTPRequest.send();
+    returnMessage = HTTPRequest.responseText;
+    return JSON.parse(returnMessage);
+  } catch (error) {
+    return "An error occurred while corresponding with the chatbot."
+  }
+}
+
+function setQueryCategory(e: string) {
+  queryCategory.value = e;
+}
+
 onMounted(() => {
   let res = getSession();
   if (res != "") {
@@ -133,18 +192,20 @@ onMounted(() => {
     loggedIn.value = false;
   }
 });
-
 </script>
 
 <template>
   <el-config-provider namespace="ep">
-    <BaseHeader @response="(e) => stateHandler(e)" :username="userName" :login-function="login" :logged-in="loggedIn" :logout-function="logout"/>
+    <BaseHeader @response="(e) => stateHandler(e)" :username="userName" :login-function="login" :logged-in="loggedIn"
+      :logout-function="logout" />
     <div style="display: flex">
-      <BaseSide @response="(e) => stateHandler(e)" :state="state" :loggedIn="loggedIn" />
+      <BaseSide @response="(e) => stateHandler(e)" :set-query-category-function="setQueryCategory" :state="state" :loggedIn="loggedIn" :categories-function="getCategories"/>
       <div style="width: 100%; height: calc(100vh - 60px);">
         <Welcome v-if="state == 0" :logged-in="loggedIn" @response="(e) => stateHandler(e)" msg="Mini ChatGPT" />
         <ChatSession v-else-if="state == 1" :submit-function="submitMessage" :auto-complete-list-function="getACList" />
         <HotSpot v-else-if="state == 2" :hot-spot-function="getHotSpot"></HotSpot>
+        <History v-else-if="state == 3" :history-function="getHistory" :set-category-function="setCategory"></History>
+        <ChatHistory v-else-if="state == 4" :category="queryCategory" :history-function="getHistory" />
       </div>
     </div>
   </el-config-provider>
