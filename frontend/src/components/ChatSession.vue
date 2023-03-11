@@ -1,12 +1,17 @@
 <script setup lang="ts">
 import { ElButton, ElMessage } from 'element-plus';
 import "~/styles/index.scss";
+import 'uno.css'
+import "element-plus/theme-chalk/src/message.scss"
+import "~/styles/chat-session.scss"
 
 import { onMounted, ref } from 'vue'
-import { WordSpacingProperty } from 'csstype';
-import { type } from 'os';
 import { ElScrollbar } from 'element-plus'
-import { update } from 'lodash';
+
+const props = defineProps({
+  submitFunction: Function,
+  autoCompleteListFunction: Function
+});
 
 interface WordItem {
   value: string
@@ -29,9 +34,8 @@ const createFilter = (queryString: string) => {
   }
 }
 const loadAll = () => {
-  return [
-    { value: '戴批是傻逼吗', link: 'https://www.sdu.edu.cn/' },
-  ]
+  let res = props.autoCompleteListFunction === undefined ? [] : props.autoCompleteListFunction();
+  return res;
 }
 
 const MessageTemplate = {
@@ -43,16 +47,13 @@ const messageList = ref([
   { id: 1, message: "I\'m a robot. You can chat with me freely now." },
 ]);
 
-const props = defineProps({
-  submitFunction: Function,
-});
 
 const innerChatBox = ref<HTMLDivElement>();
 const chatBoxRef = ref<InstanceType<typeof ElScrollbar>>();
 
 const submitLoading = ref(false);
 
-async function submit() {
+function submit() {
 
   if (props.submitFunction === undefined)
     return;
@@ -68,33 +69,36 @@ async function submit() {
     return;
   }
 
-  messageList.value.push({ id: 0, message: message });
   submitLoading.value = true;
+  messageList.value.push({ id: 0, message: message });
   updateChatBoxHeight();
 
-  let response = await props.submitFunction(message);
-  messageList.value.push({ id: 1, message: response });
-  updateChatBoxHeight();
-
-  submitLoading.value = false;
+  props.submitFunction(message, receiveMessage);
   
 }
 
+const receiveMessage = (result: string) => {
+  messageList.value.push({ id: 1, message: result });
+  updateChatBoxHeight();
+  submitLoading.value = false;
+}
+
 const updateChatBoxHeight = () => {
-  setTimeout(() => chatBoxRef.value!.setScrollTop(innerChatBox.value!.clientHeight), 10);
+  setTimeout(() => chatBoxRef.value!.setScrollTop(innerChatBox.value!.clientHeight));
 }
 
 onMounted(() => {
   words.value = loadAll();
   updateChatBoxHeight();
+  ElMessage.success("A new chat session created.");
 })
 
 </script>
 
 <template>
-  <el-container style="height: calc(100vh - 100px);">
-    <el-main>
-      <el-scrollbar max-height="calc(100vh - 100px)" ref="chatBoxRef">
+  <el-container style="height: calc(100vh - 60px);">
+    <el-main id="chatbox-main">
+      <el-scrollbar ref="chatBoxRef">
         <div ref="innerChatBox">
           <div v-for="item in messageList">
             <p v-if="item.id === 0" class="scrollbar-self">{{ item.message }}</p>
@@ -103,48 +107,22 @@ onMounted(() => {
         </div>
       </el-scrollbar>
     </el-main>
-    <el-footer>
-      <el-row>
-        <el-col :span="16">
+    <el-footer
+      height="100px" 
+      style="padding: 0 0; display: flex; align-items: center; justify-content: center; border: 1px solid var(--ep-border-color); border-radius: 3px; height: 120px margin-bottom: 0">
+      <el-row
+        style="display: flex; width: 100%; height: 100%; margin: 0 0; flex-direction: column; justify-content: center; align-items: center;">
+        <el-col style="display: flex; justify-content: center; align-items: center;">
           <el-autocomplete style="margin: 0 0;" v-model="search_state" :fetch-suggestions="querySearch" clearable
             type="textarea" :autosize="{ minRows: 1, maxRows: 3 }" class="inline-input search-bar w-50vw" size="large"
-            placeholder="Type any words freely. Use Ctrl + Enter to submit." :disabled="submitLoading" @keyup.ctrl.enter="submit" />
+            placeholder="Type any words freely. Use Ctrl + Enter to submit." :disabled="submitLoading"
+            @keyup.ctrl.enter="submit" />
         </el-col>
-        <el-col :span="8">
-          <el-button id="submit-button" :loading="submitLoading" style="margin: 0 0;" type="primary"  plain
+        <el-col style="display: flex; justify-content: center; align-items: center;">
+          <el-button id="submit-button" :loading="submitLoading" style="margin: 0 0;" type="primary" plain
             @click="submit">Submit</el-button>
         </el-col>
       </el-row>
     </el-footer>
   </el-container>
 </template>
-
-<style scoped>
-.scrollbar-self {
-  display: flex;
-  align-items: center;
-  justify-content: left;
-  min-height: 60px;
-  text-align: center;
-  border-radius: 4px;
-  background: #18222c;
-  color: #409eff;
-  margin-left: calc(max(100vw - 500px, 50vw));
-  margin-top: 20px;
-  padding: 5px 20px;
-}
-
-.scrollbar-chatbot {
-  display: flex;
-  align-items: center;
-  justify-content: left;
-  min-height: 60px;
-  text-align: center;
-  border-radius: 4px;
-  background: #1c2518;
-  color: #67c23a;
-  margin-right: calc(max(100vw - 500px, 50vw));
-  margin-top: 20px;
-  padding: 5px 20px;
-}
-</style>
