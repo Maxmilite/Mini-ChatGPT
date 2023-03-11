@@ -111,7 +111,7 @@ const logout = () => {
       <span class="dialog-footer">
         <el-button @click="() => { dialogFormVisible = false; }">Cancel</el-button>
         <el-button type="primary" @click="login()">
-          Confirm
+          Log In
         </el-button>
       </span>
     </template>

@@ -149,6 +149,11 @@ function setCategory(id: number, category: string) {
 }
 
 function getHistory(category: string) {
+  if (loggedIn.value == false) {
+    ElMessage.error("You need to sign in before using Mini-ChatGPT.")
+    setTimeout(() => stateHandler(0), 10);
+    return {};
+  }
   let returnMessage = "";
   let HTTPRequest = new XMLHttpRequest();
   let address = "/api/history/get?username=" + userName.value;
@@ -166,6 +171,9 @@ function getHistory(category: string) {
 }
 
 function getCategories() {
+  if (loggedIn.value == false) {
+    return {};
+  }
   let returnMessage = "";
   let HTTPRequest = new XMLHttpRequest();
   let address = "/api/history/categories";
@@ -188,8 +196,6 @@ onMounted(() => {
   if (res != "") {
     userName.value = res;
     loggedIn.value = true;
-  } else {
-    loggedIn.value = false;
   }
 });
 </script>

@@ -39,12 +39,13 @@ onMounted(() => {
 
 <template>
   <el-container style="height: calc(100vh - 60px);">
-    <el-main id="chatbox-main">
-      <el-scrollbar ref="chatBoxRef">
+    <el-main id="chatbox-main" style="height: inherit; margin: 0 0; padding: 0 0;">
+      <el-scrollbar ref="chatBoxRef" >
+        <p>Message in {{ category == undefined ? "All Categories" : "Category " + category }}</p>
         <div ref="innerChatBox">
           <div v-for="item in words">
-            <p class="scrollbar-self">{{ item.question }}</p>
-            <p class="scrollbar-chatbot">{{ item.answer }}</p>
+            <p class="scrollbar-self" style="margin-right: 20px;">{{ item.question }}</p>
+            <p class="scrollbar-chatbot" style="margin-left: 20px;">{{ item.answer }}</p>
           </div>
         </div>
       </el-scrollbar>

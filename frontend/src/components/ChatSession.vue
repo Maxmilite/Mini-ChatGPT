@@ -108,13 +108,13 @@ onMounted(() => {
       </el-scrollbar>
     </el-main>
     <el-footer
-      height="100px" 
-      style="padding: 0 0; display: flex; align-items: center; justify-content: center; border: 1px solid var(--ep-border-color); border-radius: 3px; height: 120px margin-bottom: 0">
+      height="max-content" 
+      style="min-height: 60px; padding: 0 0; display: flex; align-items: center; justify-content: center; border: 1px solid var(--ep-border-color); border-radius: 3px; height: 120px margin-bottom: 0">
       <el-row
         style="display: flex; width: 100%; height: 100%; margin: 0 0; flex-direction: column; justify-content: center; align-items: center;">
-        <el-col style="display: flex; justify-content: center; align-items: center;">
+        <el-col style="display: flex; justify-content: center; align-items: center; height: 100%;">
           <el-autocomplete style="margin: 0 0;" v-model="search_state" :fetch-suggestions="querySearch" clearable
-            type="textarea" :autosize="{ minRows: 1, maxRows: 3 }" class="inline-input search-bar w-50vw" size="large"
+            type="textarea" :autosize="{ minRows: 1, maxRows: 20 }" class="inline-input search-bar w-50vw" size="large"
             placeholder="Type any words freely. Use Ctrl + Enter to submit." :disabled="submitLoading"
             @keyup.ctrl.enter="submit" />
         </el-col>
