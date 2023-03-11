@@ -19,7 +19,8 @@ function exit(e: number) {
 const props = defineProps({
   loggedIn: Boolean,
   loginFunction: Function,
-  logoutFunction: Function
+  logoutFunction: Function,
+  username: String
 });
 
 const login = () => {
@@ -48,7 +49,7 @@ const logout = () => {
           <ChatLineSquare />
         </el-icon>Chats
       </template>
-      <el-menu-item index="2-1" @click="exit(1)">Start a new chat</el-menu-item>
+      <el-menu-item index="2-1" @click="exit(1)">Start a New Chat</el-menu-item>
     </el-sub-menu>
     <el-menu-item index="3" disabled>
       <el-icon>
@@ -82,6 +83,8 @@ const logout = () => {
       <template #title><el-icon>
           <User />
         </el-icon></template>
+      <p style="margin-left: 15px; font-size: 14px;" v-if="loggedIn">Signed in as <b>{{ username }}</b></p>
+      <p style="margin-left: 15px; font-size: 14px;" v-else>You haven't signed in.</p>
       <el-menu-item index="6-1"><el-icon>
           <InfoFilled />
         </el-icon>Info</el-menu-item>

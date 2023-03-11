@@ -3,7 +3,8 @@ import { ref } from "vue";
 import { ElMessage } from 'element-plus';
 
 const props = defineProps({
-  msg: String
+  msg: String,
+  loggedIn: Boolean
 });
 
 const emit = defineEmits(['response']);
@@ -26,10 +27,11 @@ const startSession = () => {
   <div class="my-2 text-center flex flex-wrap justify-center items-center"
     style="padding-top: 35vh">
     <!-- <el-button @click="count++">count is: {{ count }}</el-button> -->
-    <el-button type="primary" plain size="large" @click="startSession()">
+    <el-button v-if="loggedIn" type="primary" plain size="large" @click="startSession()">
       Try it now
       <el-icon class="el-icon"><ArrowRight /></el-icon>
     </el-button>
+    <p v-else>You need to sign in before using Mini-ChatGPT.</p>
     <!-- <el-button type="success" @click="count++">count is: {{ count }}</el-button>
     <el-button type="warning" @click="count++">count is: {{ count }}</el-button>
     <el-button type="danger" @click="count++">count is: {{ count }}</el-button>

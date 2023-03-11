@@ -1,12 +1,11 @@
 import uuid
 from flask import make_response, session
-from flask_login import LoginManager, UserMixin, login_required, login_user, logout_user
 import asyncio
+import flask
 import nest_asyncio
 from concurrent.futures import ThreadPoolExecutor
 from flask import Flask, jsonify
 from flask import request
-from flask_cors import CORS, cross_origin
 import MySQLdb
 from werkzeug.security import generate_password_hash, check_password_hash
 from gevent import monkey
@@ -36,64 +35,6 @@ executor = ThreadPoolExecutor()
 
 # Login and Session
 app.secret_key = b'a*DMp_V%q_sQ27~5'
-loginManager = LoginManager()
-loginManager.init_app(app)
-users = [
-    {
-        "id": uuid.uuid4(),
-        "username": "1",
-        "password": generate_password_hash("1")
-    }
-]
-
-
-def createUser(user_name, password):
-    user = {
-        "username": user_name,
-        "password": generate_password_hash(password),
-        "id": uuid.uuid4()
-    }
-    users.append(user)
-
-
-def getUser(user_name):
-    for user in users:
-        if user.get("username") == user_name:
-            return user
-    return None
-
-
-class User(UserMixin):
-    """User Class"""
-
-    def __init__(self, user):
-        self.username = user.get("username")
-        self.password_hash = user.get("password")
-        self.id = user.get("id")
-
-    def verifyPassword(self, password):
-        """Password Verification"""
-        if self.password_hash is None:
-            return False
-        return check_password_hash(self.password_hash, password)
-
-    def getID(self):
-        """Get User ID"""
-        return self.id
-
-    @staticmethod
-    def get(user_id):
-        if not user_id:
-            return None
-        for user in users:
-            if user.get('id') == user_id:
-                return User(user)
-        return None
-
-
-@loginManager.user_loader
-def load_user(user_id):
-    return User.get(user_id)
 
 
 # MySQL Connection
@@ -126,6 +67,21 @@ def updatePopularity(message):
                    str(val) + "\' WHERE (`id` = \'" + str(id) + "\')")
     db.commit()
 
+def getUserPassword(username):
+    cursor.execute(
+        "SELECT password FROM `userdata`.`user_pass` WHERE username=\"" + username + "\"")
+    res = cursor.fetchone()
+    if res == None:
+        return ""
+    else:
+        return res[0]
+
+def createUser(username, password):
+    cursor.execute(
+        "INSERT INTO `userdata`.`user_pass` (`username`, `password`) VALUES ('%s', '%s')" % (username, password))
+    db.commit()
+    
+
 # API
 
 
@@ -136,6 +92,8 @@ def main():
 
 @app.route('/api/message', methods=['GET'])
 def getMessage():
+    if not (session.get("username")):
+        flask.abort(401)
     message = request.args.get('message', '').replace(
         "?", "").replace(".", "").replace("？", "")
     global currentConnection
@@ -170,7 +128,6 @@ def getHotSpot():
 
 @app.route('/api/login', methods=['POST'])
 def login():
-    session.clear()
     try:
         loginJson = request.get_json()
     except Exception:
@@ -181,13 +138,13 @@ def login():
     password = loginJson.get("password")
     if not all([username, password]):
         return jsonify(code=400, msg="Invalid argument")
-    userInfo = getUser(username)
-    if userInfo is None:
-        createUser(username, password)
-        userInfo = getUser(username)
-    user = User(userInfo)
-    if user.verifyPassword(password):
-        login_user(user, remember=True)
+    curPass = getUserPassword(username=username)
+    if curPass == "":
+        createUser(username, generate_password_hash(password))
+        session["username"] = username
+        return jsonify(code=200, msg="Login success")
+    elif check_password_hash(curPass, password):
+        session["username"] = username
         return jsonify(code=200, msg="Login success")
     else:
         return jsonify(code=401, msg="Incorrect username or password")
@@ -203,10 +160,8 @@ def check_session():
 
 
 @app.route("/api/logout")
-# @cross_origin(supports_credentials=True, origins=client)
-@login_required
 def logout():
-    logout_user()
+    session.clear()
     return jsonify(code=200, msg="Success")
 
 

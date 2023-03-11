@@ -1,15 +1,22 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import { ElMessage, messageEmits } from 'element-plus'
 import { stringify } from "querystring";
 
 const serverAddress = "http://127.0.0.1:5173/api"
 const state = ref(0);
 const loggedIn = ref(false);
-const sessionValue = ref("");
+const userName = ref("");
 
 function stateHandler(e: number) {
-  state.value = e;
+  state.value = -1;
+  setTimeout(() => {
+    state.value = e;
+    if (e == 1 && !loggedIn.value) {
+      state.value = 0;
+      ElMessage.error("You need to sign in before using Mini-ChatGPT.")
+    }
+  }, 10);
 }
 
 const sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay));
@@ -24,7 +31,9 @@ async function submitMessage(message: string, callback: Function) {
         returnMessage = HTTPRequest.responseText;
         callback(returnMessage);
       }
-      else {
+      else if (HTTPRequest.status == 401) {
+        callback("You need to log in before using this ChatBot.");
+      } else {
         callback("An error occurred while corresponding with the chatbot.");
       }
     }
@@ -68,8 +77,8 @@ function login(username: string, password: string) {
     let returnMessage = JSON.parse(HTTPRequest.responseText);
     if (returnMessage.code == 200) {
       ElMessage.success(returnMessage.msg);
-      getSession();
       loggedIn.value = true;
+      userName.value = getSession();
       return 1;
     } else {
       ElMessage.error("Error: " + returnMessage.msg);
@@ -90,6 +99,7 @@ function logout() {
     let returnMessage = JSON.parse(HTTPRequest.responseText);
     ElMessage.success(returnMessage.msg);
     loggedIn.value = false;
+    stateHandler(0);
     return 0;
   } catch (error) {
     ElMessage.error("Error: Network Error");
@@ -107,26 +117,34 @@ function getSession() {
     if (returnMessage.code == 200) {
       return returnMessage.msg;
     } else {
-      ElMessage.error("Error: You are not logged in");
       return "";
     }
   } catch (error) {
-    ElMessage.error("Error: Network Error");
     return "";
   }
 }
+
+onMounted(() => {
+  let res = getSession();
+  if (res != "") {
+    userName.value = res;
+    loggedIn.value = true;
+  } else {
+    loggedIn.value = false;
+  }
+});
 
 </script>
 
 <template>
   <el-config-provider namespace="ep">
-    <BaseHeader @response="(e) => stateHandler(e)" :login-function="login" :logged-in="loggedIn" :logout-function="logout"/>
+    <BaseHeader @response="(e) => stateHandler(e)" :username="userName" :login-function="login" :logged-in="loggedIn" :logout-function="logout"/>
     <div style="display: flex">
       <BaseSide @response="(e) => stateHandler(e)" :state="state" :loggedIn="loggedIn" />
       <div style="width: 100%; height: calc(100vh - 60px);">
-        <Welcome v-if="state == 0" @response="(e) => stateHandler(e)" msg="Mini ChatGPT" />
+        <Welcome v-if="state == 0" :logged-in="loggedIn" @response="(e) => stateHandler(e)" msg="Mini ChatGPT" />
         <ChatSession v-else-if="state == 1" :submit-function="submitMessage" :auto-complete-list-function="getACList" />
-        <HotSpot v-else="state == 2" :hot-spot-function="getHotSpot"></HotSpot>
+        <HotSpot v-else-if="state == 2" :hot-spot-function="getHotSpot"></HotSpot>
       </div>
     </div>
   </el-config-provider>
