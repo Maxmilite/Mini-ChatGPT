@@ -1,7 +1,9 @@
-import uuid
-from flask import make_response, session
+import time
+from flask import session
 import asyncio
 import flask
+import schedule
+import _thread
 import nest_asyncio
 from concurrent.futures import ThreadPoolExecutor
 from flask import Flask, jsonify
@@ -13,21 +15,11 @@ monkey.patch_all()
 
 # Flask
 client = 'http://127.0.0.1:5173'
-currentConnection = 0
 app = Flask(__name__)
-
-# CORS(app, supports_credentials=True, origins=client)
-# @app.after_request
-# def getResponse(response):
-#     # response = make_response()
-#     whiteList = [client]
-#     response.headers["Access-Control-Allow-Origin"] = client
-#     response.headers["Access-Control-Allow-Credentials"] = 'true'
-#     return response
+app.config['SECRET_KEY'] = 'secret_key'
 
 # Async IO
 nest_asyncio.apply()
-maxConnection = 3
 loop = asyncio.get_event_loop()
 
 # Thread Pool
@@ -36,6 +28,63 @@ executor = ThreadPoolExecutor()
 # Login and Session
 app.secret_key = b'a*DMp_V%q_sQ27~5'
 
+
+# Session Manager
+
+
+sessionList = {}
+currentConnection = 0
+maxConnection = 3
+
+
+def querySession(username):
+    if not username in sessionList:
+        return -1
+    return sessionList[username]
+
+
+def addSession(username):
+    global currentConnection
+    if currentConnection >= maxConnection:
+        return 0
+    if querySession(username) != -1:
+        sessionList[username] = time.time()
+        return 1
+    currentConnection += 1
+    sessionList[username] = time.time()
+    return 1
+
+
+def removeSession(username):
+    global currentConnection
+    if querySession(username) == -1:
+        return 1
+    currentConnection -= 1
+    sessionList.pop(username)
+    return 1
+
+
+def renewSession(username):
+    if querySession(username) == -1:
+        return 0
+    sessionList[username] = time.time()
+    return 1
+
+
+def checkAllSessions():
+    def job():
+        ts = time.time()
+        for i in sessionList:
+            if ts - sessionList[i] >= 120:
+                sessionList[i] = -1
+
+    schedule.every(2).minutes.do(job)
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
+
+_thread.start_new_thread(checkAllSessions)
 
 # MySQL Connection
 '''
@@ -109,16 +158,13 @@ def main():
 def getMessage():
     if not (session.get("username")):
         flask.abort(401)
+    if querySession(session['username']) == -1:
+        flask.abort(403)
     message = request.args.get('message', '').replace(
         "?", "").replace(".", "").replace("？", "")
-    global currentConnection
-    if currentConnection >= maxConnection:
-        return "Access Denied."
-    currentConnection += 1
     cursor.execute(
         "SELECT answer FROM message_table WHERE question=\"" + message + "\"")
     data = cursor.fetchone()
-    currentConnection -= 1
     if (data != None):
         updatePopularity(message)
         storeMessage(getUserID(session.get("username")), message, data[0])
@@ -153,7 +199,7 @@ def getChatHistory():
     category = request.args.get('category', '')
     if not category:
         cursor.execute(
-            "SELECT date,message_sent,message_received,category,id FROM `userdata`.`chat_history` WHERE `sender`=\'%s\'" % userID)
+            "SELECT date,message_sent,message_received,category,id FROM `userdata`.`chat_history` WHERE `sender`=\'%s\' ORDER BY date DESC" % userID)
         data = cursor.fetchall()
         return jsonify([{"date": i[0], "question": i[1], "answer": i[2], "category": i[3], "id": i[4]} for i in data])
     else:
@@ -233,7 +279,32 @@ def logout():
     return jsonify(code=200, msg="Success")
 
 
+@app.route("/api/session/renew")
+def renew():
+    if not (session.get("username")):
+        flask.abort(401)
+    if renewSession(session['username']) == 0:
+        return jsonify(code=403, msg="You are not logged in.")
+    return jsonify(code=200, msg="Success")
+
+@app.route("/api/session/register")
+def register():
+    if not (session.get("username")):
+        flask.abort(401)
+    if addSession(session['username']) == 0:
+        return jsonify(code=403, msg="Server is full, please try again later.")
+    return jsonify(code=200, msg="Success")
+
+
+@app.route("/api/session/remove")
+def remove():
+    if not (session.get("username")):
+        flask.abort(401)
+    removeSession(session['username'])
+    return jsonify(code=200, msg="Success")
+
 # Main
+
 
 if __name__ == "__main__":
     from werkzeug.debug import DebuggedApplication

@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { ElButton, ElMessage } from 'element-plus';
+import { collapseItemProps, ElButton, ElMessage } from 'element-plus';
 import "~/styles/index.scss";
 import 'uno.css'
 import "element-plus/theme-chalk/src/message.scss"
 import "~/styles/chat-session.scss"
 
-import { onMounted, ref } from 'vue'
+import { getCurrentInstance, onBeforeUnmount, onMounted, ref } from 'vue'
 import { ElScrollbar } from 'element-plus'
+import { Socket } from 'dgram';
+import { on } from 'events';
 
 const props = defineProps({
   submitFunction: Function,
@@ -47,7 +49,6 @@ const messageList = ref([
   { id: 1, message: "I\'m a robot. You can chat with me freely now." },
 ]);
 
-
 const innerChatBox = ref<HTMLDivElement>();
 const chatBoxRef = ref<InstanceType<typeof ElScrollbar>>();
 
@@ -74,7 +75,7 @@ function submit() {
   updateChatBoxHeight();
 
   props.submitFunction(message, receiveMessage);
-  
+
 }
 
 const receiveMessage = (result: string) => {
@@ -87,11 +88,90 @@ const updateChatBoxHeight = () => {
   setTimeout(() => chatBoxRef.value!.setScrollTop(innerChatBox.value!.clientHeight));
 }
 
+function registerSession() {
+  let HTTPRequest = new XMLHttpRequest();
+  HTTPRequest.open("GET", "http://127.0.0.1:5173/api/api/session/register", false);
+  HTTPRequest.withCredentials = true;
+  try {
+    HTTPRequest.send();
+    let returnMessage = JSON.parse(HTTPRequest.responseText);
+    if (returnMessage.code == 200) {
+      return 1;
+    } else {
+      ElMessage.error("Error: " + returnMessage.msg);
+      return 0;
+    }
+  } catch (error) {
+    ElMessage.error("Error: Network Error");
+    return 0;
+  }
+}
+
+function renewSession() {
+  let HTTPRequest = new XMLHttpRequest();
+  HTTPRequest.open("GET", "http://127.0.0.1:5173/api/api/session/renew", false);
+  HTTPRequest.withCredentials = true;
+  try {
+    HTTPRequest.send();
+    let returnMessage = JSON.parse(HTTPRequest.responseText);
+    if (returnMessage.code == 200) {
+      return 1;
+    } else {
+      ElMessage.error("Error: " + returnMessage.msg);
+      return 0;
+    }
+  } catch (error) {
+    ElMessage.error("Error: Network Error");
+    return 0;
+  }
+}
+
+function removeSession() {
+  let HTTPRequest = new XMLHttpRequest();
+  HTTPRequest.open("GET", "http://127.0.0.1:5173/api/api/session/remove", false);
+  HTTPRequest.withCredentials = true;
+  try {
+    HTTPRequest.send();
+    let returnMessage = JSON.parse(HTTPRequest.responseText);
+    if (returnMessage.code == 200) {
+      return 1;
+    } else {
+      ElMessage.error("Error: " + returnMessage.msg);
+      return 0;
+    }
+  } catch (error) {
+    ElMessage.error("Error: Network Error");
+    return 0;
+  }
+}
+
+const emit = defineEmits(['response']);
+function exit(e: number) {
+  emit('response', e);
+}
+
+var schedule: any;
+const registered = ref(false);
+
 onMounted(() => {
   words.value = loadAll();
   updateChatBoxHeight();
-  ElMessage.success("A new chat session created.");
+  if (registerSession()) {
+    ElMessage.success("A new chat session created.");
+    schedule = setInterval(renewSession, 60000);
+    registered.value = true;
+  } else {
+    exit(0);
+  }
 })
+
+onBeforeUnmount(() => {
+  if (registered.value) {
+    removeSession();
+    window.clearInterval(schedule);
+  }
+})
+
 
 </script>
 
@@ -107,8 +187,7 @@ onMounted(() => {
         </div>
       </el-scrollbar>
     </el-main>
-    <el-footer
-      height="max-content" 
+    <el-footer height="max-content"
       style="min-height: 60px; padding: 0 0; display: flex; align-items: center; justify-content: center; border: 1px solid var(--ep-border-color); border-radius: 3px; height: 120px margin-bottom: 0">
       <el-row
         style="display: flex; width: 100%; height: 100%; margin: 0 0; flex-direction: column; justify-content: center; align-items: center;">
