@@ -66,7 +66,7 @@ onMounted(() => {
 
 <template>
   <el-menu default-active="2" class="el-menu-vertical-demo" :collapse="isCollapse">
-    <el-menu-item index="0" @click="isCollapse = !isCollapse">
+  <el-menu-item index="0" @click="isCollapse = !isCollapse">
       <el-icon v-if="isCollapse">
         <ArrowRightBold />
       </el-icon>
@@ -77,9 +77,9 @@ onMounted(() => {
     </el-menu-item>
     <el-menu-item @click="setQueryCategoryFunction!(); exit(4);">
       <el-icon>
-        <Document />
+        <MessageBox />
       </el-icon>
-      <span>All</span>
+      <span>All Categories</span>
     </el-menu-item>
     <el-menu-item v-for="group in groupList" :index="(groupList.indexOf(group) + 1).toString()"
       @click="setQueryCategoryFunction!(group); exit(4);">
@@ -93,44 +93,44 @@ onMounted(() => {
 
 
     <!-- <el-menu-item v-if="state === 1" >
-                    <el-icon>
-                      <Document />
-                    </el-icon>
-                    <span>Current</span>
-                  </el-menu-item>
-                  <el-sub-menu 
-                    v-for="group in groupList" :allow-drop="true" :allow-drag="true"
-                    :index="(groupList.indexOf(group) + 1).toString()" draggable="true">
-                    <template #title>
-                      <el-icon>
-                        <MessageBox />
-                      </el-icon><span>{{ group.text }}</span>
-                      <el-icon v-if="!isCollapse" style="margin-left: 10px" @click="handleGroupClose(group)">
-                        <Close />
-                      </el-icon>
-                    </template>
-                    <el-menu-item-group>
-                      <template #title v-if="isCollapse"><span>{{ group.text }}</span></template>
-                      <el-menu-item draggable="true" v-for="item in group.child" :index="(groupList.indexOf(group) + 1) + '-' + (group.child.indexOf(item) + 1)">
-                        <el-icon>
-                          <Document />
-                        </el-icon>{{ item.text }}
-                        <el-icon style="margin-left: 10px" @click="handleItemClose(group, item)">
-                          <Close />
-                        </el-icon>
-                      </el-menu-item>
-                    </el-menu-item-group>
-                  </el-sub-menu> -->
+        <el-icon>
+          <Document />
+        </el-icon>
+        <span>Current</span>
+      </el-menu-item>
+      <el-sub-menu 
+        v-for="group in groupList" :allow-drop="true" :allow-drag="true"
+        :index="(groupList.indexOf(group) + 1).toString()" draggable="true">
+        <template #title>
+          <el-icon>
+            <MessageBox />
+          </el-icon><span>{{ group.text }}</span>
+          <el-icon v-if="!isCollapse" style="margin-left: 10px" @click="handleGroupClose(group)">
+            <Close />
+          </el-icon>
+        </template>
+        <el-menu-item-group>
+          <template #title v-if="isCollapse"><span>{{ group.text }}</span></template>
+          <el-menu-item draggable="true" v-for="item in group.child" :index="(groupList.indexOf(group) + 1) + '-' + (group.child.indexOf(item) + 1)">
+            <el-icon>
+              <Document />
+            </el-icon>{{ item.text }}
+            <el-icon style="margin-left: 10px" @click="handleItemClose(group, item)">
+              <Close />
+            </el-icon>
+          </el-menu-item>
+        </el-menu-item-group>
+      </el-sub-menu> -->
 
     <!-- <div v-if="!isCollapse">
-                <el-button v-if="!inputVisible" style="margin-top: 10px;" type="default" size="default" class="w-30"
-                  @click="showInput">
-                  + New Group
-                </el-button>
-                <el-input v-else style="margin-top: 10px;" type="default" size="default" class="w-30" ref="InputRef"
-                  v-model="inputValue" @keyup.enter="handleInputConfirm" @blur="handleInputConfirm">
-                </el-input>
-              </div> -->
+        <el-button v-if="!inputVisible" style="margin-top: 10px;" type="default" size="default" class="w-30"
+          @click="showInput">
+          + New Group
+        </el-button>
+        <el-input v-else style="margin-top: 10px;" type="default" size="default" class="w-30" ref="InputRef"
+          v-model="inputValue" @keyup.enter="handleInputConfirm" @blur="handleInputConfirm">
+        </el-input>
+      </div> -->
 
   </el-menu>
 </template>

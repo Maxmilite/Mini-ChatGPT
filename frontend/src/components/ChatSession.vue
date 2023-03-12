@@ -1,14 +1,12 @@
 <script setup lang="ts">
-import { collapseItemProps, ElButton, ElMessage } from 'element-plus';
+import { ElButton, ElMessage } from 'element-plus';
 import "~/styles/index.scss";
 import 'uno.css'
 import "element-plus/theme-chalk/src/message.scss"
 import "~/styles/chat-session.scss"
 
-import { getCurrentInstance, onBeforeUnmount, onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { ElScrollbar } from 'element-plus'
-import { Socket } from 'dgram';
-import { on } from 'events';
 
 const props = defineProps({
   submitFunction: Function,
@@ -38,11 +36,6 @@ const createFilter = (queryString: string) => {
 const loadAll = () => {
   let res = props.autoCompleteListFunction === undefined ? [] : props.autoCompleteListFunction();
   return res;
-}
-
-const MessageTemplate = {
-  id: 0,
-  message: ""
 }
 
 const messageList = ref([
@@ -181,8 +174,8 @@ onBeforeUnmount(() => {
       <el-scrollbar ref="chatBoxRef">
         <div ref="innerChatBox">
           <div v-for="item in messageList">
-            <p v-if="item.id === 0" class="scrollbar-self">{{ item.message }}</p>
-            <p v-else class="scrollbar-chatbot">{{ item.message }}</p>
+            <span v-if="item.id === 0" class="scrollbar-self">{{ item.message }}</span>
+            <span v-else class="scrollbar-chatbot">{{ item.message }}</span>
           </div>
         </div>
       </el-scrollbar>

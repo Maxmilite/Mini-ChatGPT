@@ -1,3 +1,4 @@
+import sys
 import time
 from flask import session
 import asyncio
@@ -11,6 +12,7 @@ from flask import request
 import MySQLdb
 from werkzeug.security import generate_password_hash, check_password_hash
 from gevent import monkey
+from nlp import getNLP
 monkey.patch_all()
 
 # Flask
@@ -27,11 +29,6 @@ executor = ThreadPoolExecutor()
 
 # Login and Session
 app.secret_key = b'a*DMp_V%q_sQ27~5'
-
-
-# Session Manager
-
-
 sessionList = {}
 currentConnection = 0
 maxConnection = 3
@@ -52,6 +49,7 @@ def addSession(username):
         return 1
     currentConnection += 1
     sessionList[username] = time.time()
+    print("[Info] Session added from " + username + ".", file=sys.stderr)
     return 1
 
 
@@ -61,6 +59,7 @@ def removeSession(username):
         return 1
     currentConnection -= 1
     sessionList.pop(username)
+    print("[Info] Session removed from " + username + ".", file=sys.stderr)
     return 1
 
 
@@ -68,15 +67,23 @@ def renewSession(username):
     if querySession(username) == -1:
         return 0
     sessionList[username] = time.time()
+    print("[Info] Session renewed from " + username + ".", file=sys.stderr)
     return 1
 
 
 def checkAllSessions():
     def job():
+        print("[Info] Running sessions check schedule.", file=sys.stderr)
+        global currentConnection
         ts = time.time()
         for i in sessionList:
+            if sessionList[i] == -1:
+                continue
             if ts - sessionList[i] >= 120:
                 sessionList[i] = -1
+                print("[Info] Session removed from " +
+                      i + ".", file=sys.stderr)
+                currentConnection -= 1
 
     schedule.every(2).minutes.do(job)
     while True:
@@ -87,9 +94,6 @@ def checkAllSessions():
 _thread.start_new_thread(checkAllSessions)
 
 # MySQL Connection
-'''
-A SQL Server with a database called $nameDatabaseMessage is needed. 
-'''
 
 address = "localhost"
 port = 3306
@@ -146,6 +150,21 @@ def storeMessage(userID, messageSent, messageReceived):
     db.commit()
 
 
+def getNLPMessage(e):
+    NLPList = getNLP(e)
+    res = "According to your question, I have found something similar with keywords: "
+    for nlp in NLPList:
+        res += "For %s: " % nlp
+        cursor.execute(
+            "SELECT answer FROM `MessageTemplate`.`message_table` WHERE question like \"%%" + nlp + "%%\"")
+        data = cursor.fetchall()
+        for datum in data:
+            res += "    %s; " % datum
+    if res == "According to your question, I have found something similar with keywords: ":
+        return "I'm sorry but I cannot find anything similar with your keywords currently."
+    return res
+
+
 # API
 
 
@@ -170,7 +189,7 @@ def getMessage():
         storeMessage(getUserID(session.get("username")), message, data[0])
         return data[0]
     else:
-        return unknownMessage
+        return getNLPMessage(message)
 
 
 @app.route('/api/autocomplete', methods=['GET'])
@@ -287,6 +306,7 @@ def renew():
         return jsonify(code=403, msg="You are not logged in.")
     return jsonify(code=200, msg="Success")
 
+
 @app.route("/api/session/register")
 def register():
     if not (session.get("username")):
@@ -310,6 +330,5 @@ if __name__ == "__main__":
     from werkzeug.debug import DebuggedApplication
     from gevent import pywsgi
     dapp = DebuggedApplication(app, evalex=True)
-    app.jinja_env.auto_reload = True
     server = pywsgi.WSGIServer(('127.0.0.1', 5000), app)
     server.serve_forever()

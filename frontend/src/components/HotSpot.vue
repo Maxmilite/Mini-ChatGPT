@@ -1,6 +1,6 @@
-<script setup lang="ts">;
+<script setup lang="ts">
+
 import { ref, onMounted } from "vue";
-import { ElMessage } from 'element-plus';
 
 interface WordItem {
   question: string,
@@ -12,8 +12,6 @@ interface WordItem {
 const props = defineProps({
   hotSpotFunction: Function
 });
-
-const emit = defineEmits(['response']);
 
 const tableData = ref<WordItem[]>([]);
 
@@ -30,10 +28,10 @@ onMounted(() => {
     <h1>Mini ChatGPT Search HotSpot List</h1>
     <div id="main">
       <el-table align="center" :data="tableData" stripe style="width: 80%; height: 90%;" :border="true">
-        <el-table-column align="center" prop="rank" label="Rank" width="100" />
-        <el-table-column align="center" prop="question" label="Question" />
-        <el-table-column align="center" prop="answer" label="Answer" />
-        <el-table-column align="center" prop="popularity" label="Popularity" width="100" />
+        <el-table-column sortable align="center" prop="rank" label="Rank" width="100" />
+        <el-table-column sortable align="center" prop="question" label="Question" />
+        <el-table-column sortable align="center" prop="answer" label="Answer" />
+        <el-table-column sortable align="center" prop="popularity" label="Popularity" width="120" />
       </el-table>
     </div>
   </div>

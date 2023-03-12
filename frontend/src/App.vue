@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { ElMessage, messageEmits } from 'element-plus'
-import { stringify } from "querystring";
-import { add } from "lodash";
-import {} from '@element-plus/icons-vue';
+import { ElMessage } from 'element-plus'
 
 const serverAddress = "http://127.0.0.1:5173/api"
 const state = ref(0);
@@ -38,7 +35,7 @@ async function submitMessage(message: string, callback: Function) {
         callback("You need to log in before using this ChatBot.");
       } else if (HTTPRequest.status == 403) {
         callback("Server is full currently, you are kicked out.");
-      }else {
+      } else {
         callback("An error occurred while corresponding with the chatbot.");
       }
     }
@@ -207,10 +204,12 @@ onMounted(() => {
     <BaseHeader @response="(e) => stateHandler(e)" :username="userName" :login-function="login" :logged-in="loggedIn"
       :logout-function="logout" />
     <div style="display: flex">
-      <BaseSide @response="(e) => stateHandler(e)" :set-query-category-function="setQueryCategory" :state="state" :loggedIn="loggedIn" :categories-function="getCategories"/>
+      <BaseSide @response="(e) => stateHandler(e)" :set-query-category-function="setQueryCategory" :state="state"
+        :loggedIn="loggedIn" :categories-function="getCategories" />
       <div style="width: 100%; height: calc(100vh - 60px);">
         <Welcome v-if="state == 0" :logged-in="loggedIn" @response="(e) => stateHandler(e)" msg="Mini ChatGPT" />
-        <ChatSession v-else-if="state == 1" @response="(e) => stateHandler(e)" :submit-function="submitMessage" :auto-complete-list-function="getACList" />
+        <ChatSession v-else-if="state == 1" @response="(e) => stateHandler(e)" :submit-function="submitMessage"
+          :auto-complete-list-function="getACList" />
         <HotSpot v-else-if="state == 2" :hot-spot-function="getHotSpot"></HotSpot>
         <History v-else-if="state == 3" :history-function="getHistory" :set-category-function="setCategory"></History>
         <ChatHistory v-else-if="state == 4" :category="queryCategory" :history-function="getHistory" />

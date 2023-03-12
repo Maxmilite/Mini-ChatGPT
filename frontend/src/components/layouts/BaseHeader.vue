@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ElMessage } from 'element-plus';
+import { Action, ElMessage, ElMessageBox } from 'element-plus';
 import { reactive, ref } from 'vue';
 import { toggleDark } from '~/composables';
 
@@ -10,7 +10,7 @@ const form = reactive({
   password: ''
 })
 const formLabelWidth = '100px';
-
+const userInfoVisible = ref(false);
 
 function exit(e: number) {
   emit('response', e);
@@ -44,18 +44,12 @@ const logout = () => {
     <el-menu-item index="1" @click="exit(0)">Mini ChatGPT</el-menu-item>
     <el-sub-menu index="2">
       <template #title>
-        <!-- <el-icon> <ChatLineSquare /> </el-icon> -->
         <el-icon>
           <ChatLineSquare />
         </el-icon>Chats
       </template>
       <el-menu-item index="2-1" @click="exit(1)">Start a New Chat</el-menu-item>
     </el-sub-menu>
-    <el-menu-item index="3" disabled>
-      <el-icon>
-        <setting />
-      </el-icon>Settings
-    </el-menu-item>
     <el-sub-menu index="4">
       <template #title>
         <el-icon>
@@ -69,7 +63,7 @@ const logout = () => {
       </el-menu-item-group>
       <el-menu-item-group>
         <template #title><span>Hotspot</span></template>
-        <el-menu-item @click="exit(2)" index="5-1">Hotspot</el-menu-item>
+        <el-menu-item @click="exit(2)" index="5-1">View Hotspot</el-menu-item>
       </el-menu-item-group>
     </el-sub-menu>
     <div style="flex-grow: 1" />
@@ -84,7 +78,7 @@ const logout = () => {
         </el-icon></template>
       <p style="margin-left: 15px; font-size: 14px;" v-if="loggedIn">Signed in as <b>{{ username }}</b></p>
       <p style="margin-left: 15px; font-size: 14px;" v-else>You haven't signed in.</p>
-      <el-menu-item index="6-1"><el-icon>
+      <el-menu-item v-if="loggedIn" text index="6-1" @click="userInfoVisible = true"><el-icon>
           <InfoFilled />
         </el-icon>Info</el-menu-item>
       <el-menu-item index="6-2" v-if="loggedIn" @click="logout()"><el-icon>
@@ -112,6 +106,16 @@ const logout = () => {
         <el-button @click="() => { dialogFormVisible = false; }">Cancel</el-button>
         <el-button type="primary" @click="login()">
           Log In
+        </el-button>
+      </span>
+    </template>
+  </el-dialog>
+  <el-dialog draggable destroy-on-close v-model="userInfoVisible" title="User Info" width="30%" :center="true">
+    <span>User Name: {{ username }}</span>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button type="primary" @click="userInfoVisible = false">
+          Confirm
         </el-button>
       </span>
     </template>

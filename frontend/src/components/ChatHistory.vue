@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ElButton, ElMessage } from 'element-plus';
 import "~/styles/index.scss";
 import 'uno.css'
 import "element-plus/theme-chalk/src/message.scss"
@@ -40,7 +39,7 @@ onMounted(() => {
 <template>
   <el-container style="height: calc(100vh - 60px);">
     <el-main id="chatbox-main" style="height: inherit; margin: 0 0; padding: 0 0;">
-      <el-scrollbar ref="chatBoxRef" >
+      <el-scrollbar ref="chatBoxRef">
         <p>Message in {{ category == undefined ? "All Categories" : "Category " + category }}</p>
         <div ref="innerChatBox">
           <div v-for="item in words">
