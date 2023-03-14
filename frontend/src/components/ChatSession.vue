@@ -83,7 +83,7 @@ const updateChatBoxHeight = () => {
 
 function registerSession() {
   let HTTPRequest = new XMLHttpRequest();
-  HTTPRequest.open("GET", "http://127.0.0.1:5173/api/api/session/register", false);
+  HTTPRequest.open("GET", "/api/session/register", false);
   HTTPRequest.withCredentials = true;
   try {
     HTTPRequest.send();
@@ -102,7 +102,7 @@ function registerSession() {
 
 function renewSession() {
   let HTTPRequest = new XMLHttpRequest();
-  HTTPRequest.open("GET", "http://127.0.0.1:5173/api/api/session/renew", false);
+  HTTPRequest.open("GET", "/api/session/renew", false);
   HTTPRequest.withCredentials = true;
   try {
     HTTPRequest.send();
@@ -121,7 +121,7 @@ function renewSession() {
 
 function removeSession() {
   let HTTPRequest = new XMLHttpRequest();
-  HTTPRequest.open("GET", "http://127.0.0.1:5173/api/api/session/remove", false);
+  HTTPRequest.open("GET", "/api/session/remove", false);
   HTTPRequest.withCredentials = true;
   try {
     HTTPRequest.send();

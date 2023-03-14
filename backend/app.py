@@ -173,7 +173,7 @@ def main():
     return "Invalid arguments"
 
 
-@app.route('/api/message', methods=['GET'])
+@app.route('/message', methods=['GET'])
 def getMessage():
     if not (session.get("username")):
         flask.abort(401)
@@ -192,7 +192,7 @@ def getMessage():
         return getNLPMessage(message)
 
 
-@app.route('/api/autocomplete', methods=['GET'])
+@app.route('/autocomplete', methods=['GET'])
 def getACList():
     if not (session.get("username")):
         flask.abort(401)
@@ -202,7 +202,7 @@ def getACList():
     return jsonify([{"value": i[0]} for i in data])
 
 
-@app.route('/api/hotspot', methods=['GET'])
+@app.route('/hotspot', methods=['GET'])
 def getHotSpot():
     cursor.execute(
         "SELECT question,answer,popularity FROM message_table ORDER BY popularity DESC")
@@ -210,7 +210,7 @@ def getHotSpot():
     return jsonify([{"question": i[0], "answer": i[1], "popularity": i[2], "rank": data.index(i) + 1} for i in data])
 
 
-@app.route('/api/history/get', methods=['GET'])
+@app.route('/history/get', methods=['GET'])
 def getChatHistory():
     if not (session.get("username")):
         flask.abort(401)
@@ -228,7 +228,7 @@ def getChatHistory():
         return jsonify([{"date": i[0], "question": i[1], "answer": i[2], "category": i[3], "id": i[4]} for i in data])
 
 
-@app.route('/api/history/set', methods=['POST'])
+@app.route('/history/set', methods=['POST'])
 def setChatHistory():
     if not (session.get("username")):
         flask.abort(401)
@@ -246,7 +246,7 @@ def setChatHistory():
     return jsonify(code=200, msg="Success")
 
 
-@app.route('/api/history/categories', methods=['GET'])
+@app.route('/history/categories', methods=['GET'])
 def getHistoryCategories():
     if not (session.get("username")):
         flask.abort(401)
@@ -257,7 +257,7 @@ def getHistoryCategories():
     return jsonify([i[0] for i in data])
 
 
-@app.route('/api/login', methods=['POST'])
+@app.route('/login', methods=['POST'])
 def login():
     try:
         loginJson = request.get_json()
@@ -281,7 +281,7 @@ def login():
         return jsonify(code=401, msg="Incorrect username or password")
 
 
-@app.route("/api/session", methods=["GET"])
+@app.route("/session", methods=["GET"])
 def check_session():
     username = session.get("username")
     if username:
@@ -290,7 +290,7 @@ def check_session():
         return jsonify(code=401, msg="Not logged in")
 
 
-@app.route("/api/logout")
+@app.route("/logout")
 def logout():
     if not (session.get("username")):
         flask.abort(401)
@@ -298,7 +298,7 @@ def logout():
     return jsonify(code=200, msg="Success")
 
 
-@app.route("/api/session/renew")
+@app.route("/session/renew")
 def renew():
     if not (session.get("username")):
         flask.abort(401)
@@ -307,7 +307,7 @@ def renew():
     return jsonify(code=200, msg="Success")
 
 
-@app.route("/api/session/register")
+@app.route("/session/register")
 def register():
     if not (session.get("username")):
         flask.abort(401)
@@ -316,7 +316,7 @@ def register():
     return jsonify(code=200, msg="Success")
 
 
-@app.route("/api/session/remove")
+@app.route("/session/remove")
 def remove():
     if not (session.get("username")):
         flask.abort(401)

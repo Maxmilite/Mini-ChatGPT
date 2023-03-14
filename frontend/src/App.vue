@@ -2,7 +2,7 @@
 import { onMounted, ref } from "vue";
 import { ElMessage } from 'element-plus'
 
-const serverAddress = "http://127.0.0.1:5173/api"
+const serverAddress = "/api"
 const state = ref(0);
 const loggedIn = ref(false);
 const userName = ref("");
@@ -24,7 +24,7 @@ const queryCategory = ref("");
 async function submitMessage(message: string, callback: Function) {
   let returnMessage = "";
   let HTTPRequest = new XMLHttpRequest();
-  HTTPRequest.open("GET", serverAddress + "/api/message?message=" + message, true);
+  HTTPRequest.open("GET", serverAddress + "/message?message=" + message, true);
   HTTPRequest.onreadystatechange = () => {
     if (HTTPRequest.readyState == 4) {
       if (HTTPRequest.status == 200) {
@@ -46,7 +46,7 @@ async function submitMessage(message: string, callback: Function) {
 function getACList() {
   let returnMessage = "";
   let HTTPRequest = new XMLHttpRequest();
-  HTTPRequest.open("GET", serverAddress + "/api/autocomplete", false);
+  HTTPRequest.open("GET", serverAddress + "/autocomplete", false);
   try {
     HTTPRequest.send();
     returnMessage = HTTPRequest.responseText;
@@ -58,7 +58,7 @@ function getACList() {
 
 function login(username: string, password: string) {
   let HTTPRequest = new XMLHttpRequest();
-  HTTPRequest.open("POST", serverAddress + "/api/login", false);
+  HTTPRequest.open("POST", serverAddress + "/login", false);
   HTTPRequest.withCredentials = true;
   HTTPRequest.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
   try {
@@ -81,7 +81,7 @@ function login(username: string, password: string) {
 
 function logout() {
   let HTTPRequest = new XMLHttpRequest();
-  HTTPRequest.open("GET", serverAddress + "/api/logout", false);
+  HTTPRequest.open("GET", serverAddress + "/logout", false);
   HTTPRequest.withCredentials = true;
   try {
     HTTPRequest.send();
@@ -98,7 +98,7 @@ function logout() {
 
 function getSession() {
   let HTTPRequest = new XMLHttpRequest();
-  HTTPRequest.open("GET", serverAddress + "/api/session", false);
+  HTTPRequest.open("GET", serverAddress + "/session", false);
   HTTPRequest.withCredentials = true;
   try {
     HTTPRequest.send();
@@ -116,7 +116,7 @@ function getSession() {
 function getHotSpot() {
   let returnMessage = "";
   let HTTPRequest = new XMLHttpRequest();
-  HTTPRequest.open("GET", serverAddress + "/api/hotspot", false);
+  HTTPRequest.open("GET", serverAddress + "/hotspot", false);
   try {
     HTTPRequest.send();
     returnMessage = HTTPRequest.responseText;
@@ -128,7 +128,7 @@ function getHotSpot() {
 
 function setCategory(id: number, category: string) {
   let HTTPRequest = new XMLHttpRequest();
-  HTTPRequest.open("POST", serverAddress + "/api/history/set", false);
+  HTTPRequest.open("POST", serverAddress + "/history/set", false);
   HTTPRequest.withCredentials = true;
   HTTPRequest.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
   try {
@@ -155,7 +155,7 @@ function getHistory(category: string) {
   }
   let returnMessage = "";
   let HTTPRequest = new XMLHttpRequest();
-  let address = "/api/history/get?username=" + userName.value;
+  let address = "/history/get?username=" + userName.value;
   if (category) {
     address += "&category=" + category;
   }
@@ -175,7 +175,7 @@ function getCategories() {
   }
   let returnMessage = "";
   let HTTPRequest = new XMLHttpRequest();
-  let address = "/api/history/categories";
+  let address = "/history/categories";
   HTTPRequest.open("GET", serverAddress + address, false);
   try {
     HTTPRequest.send();
