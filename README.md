@@ -1,5 +1,7 @@
 # Mini-ChatGPT
 
+**This repository is archived because the assignment is due.**
+
 **A light-weight user-friendly chat bot.**
 
 <img src="https://img.shields.io/badge/Dependency-Vue,&nbsp;Flask,&nbsp;Element+-green.svg?style=flat-square"/>
