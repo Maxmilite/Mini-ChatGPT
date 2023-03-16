@@ -60,6 +60,7 @@ const logout = () => {
       <el-menu-item-group>
         <template #title><span>History</span></template>
         <el-menu-item index="4-1" @click="exit(3)">View History</el-menu-item>
+        <el-menu-item index="4-2" @click="exit(5)">View Tree History</el-menu-item>
       </el-menu-item-group>
       <el-menu-item-group>
         <template #title><span>Hotspot</span></template>

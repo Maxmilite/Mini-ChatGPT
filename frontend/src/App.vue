@@ -213,6 +213,8 @@ onMounted(() => {
         <HotSpot v-else-if="state == 2" :hot-spot-function="getHotSpot"></HotSpot>
         <History v-else-if="state == 3" :history-function="getHistory" :set-category-function="setCategory"></History>
         <ChatHistory v-else-if="state == 4" :category="queryCategory" :history-function="getHistory" />
+        <TreeHistory v-else-if="state == 5" :categories-function="getCategories" :history-function="getHistory"
+          :set-category-function="setCategory"></TreeHistory>
       </div>
     </div>
   </el-config-provider>

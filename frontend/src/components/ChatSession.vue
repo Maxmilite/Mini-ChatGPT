@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ElButton, ElMessage } from 'element-plus';
+import { ElButton, ElMessage, genFileId, UploadProps, UploadRawFile } from 'element-plus';
 import "~/styles/index.scss";
 import 'uno.css'
 import "element-plus/theme-chalk/src/message.scss"
@@ -7,6 +7,9 @@ import "~/styles/chat-session.scss"
 
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { ElScrollbar } from 'element-plus'
+import { UploadFilled } from '@element-plus/icons-vue'
+import { UploadInstance } from 'element-plus/es/components/upload';
+import { fdatasync, read } from 'fs';
 
 const props = defineProps({
   submitFunction: Function,
@@ -49,6 +52,11 @@ const submitLoading = ref(false);
 
 function submit() {
 
+  if (documentType.value == "File") {
+    submitFile();
+    return;
+  }
+
   if (props.submitFunction === undefined)
     return;
   let submitButton = document.getElementById("submit-button");
@@ -75,6 +83,10 @@ const receiveMessage = (result: string) => {
   messageList.value.push({ id: 1, message: result });
   updateChatBoxHeight();
   submitLoading.value = false;
+}
+
+const receiveFileRequest = (response: any) => {
+  console.log(response);
 }
 
 const updateChatBoxHeight = () => {
@@ -146,6 +158,62 @@ function exit(e: number) {
 var schedule: any;
 const registered = ref(false);
 
+const documentType = ref('Text');
+const options = [
+  {
+    value: 'Text',
+    label: 'Text',
+  },
+  {
+    value: 'Article',
+    label: 'Article',
+  },
+  {
+    value: 'File',
+    label: 'File',
+  }
+]
+
+const upload = ref<UploadInstance>();
+
+const handleExceed: UploadProps['onExceed'] = (files) => {
+  upload.value!.clearFiles();
+  const file = files[0] as UploadRawFile;
+  file.uid = genFileId();
+  upload.value!.handleStart(file);
+}
+const submitFile = () => {
+  upload.value!.submit();
+  upload.value!.clearFiles();
+}
+const handleUpload = (e: any) => {
+  const reader = new FileReader();
+  reader.readAsText(e.file);
+  let HTTPRequest = new XMLHttpRequest();
+  reader.onload = () => {
+    submitLoading.value = true;
+    messageList.value.push({ id: 0, message: "Message from file: " + reader.result?.toString() || "" });
+    updateChatBoxHeight();
+    HTTPRequest.open("GET", "api/message?message=" + reader.result, true);
+    HTTPRequest.onreadystatechange = () => {
+      if (HTTPRequest.readyState == 4) {
+        if (HTTPRequest.status == 200) {
+          receiveMessage(HTTPRequest.responseText);
+        }
+        else if (HTTPRequest.status == 401) {
+          receiveMessage("You need to log in before using this ChatBot.");
+        } else if (HTTPRequest.status == 403) {
+          receiveMessage("Server is full currently, you are kicked out.");
+        } else {
+          receiveMessage("An error occurred while corresponding with the chatbot.");
+        }
+      }
+    }
+    HTTPRequest.send();
+  }
+  return HTTPRequest;
+}
+
 onMounted(() => {
   words.value = loadAll();
   updateChatBoxHeight();
@@ -184,11 +252,34 @@ onBeforeUnmount(() => {
       style="min-height: 60px; padding: 0 0; display: flex; align-items: center; justify-content: center; border: 1px solid var(--ep-border-color); border-radius: 3px; height: 120px margin-bottom: 0">
       <el-row
         style="display: flex; width: 100%; height: 100%; margin: 0 0; flex-direction: column; justify-content: center; align-items: center;">
-        <el-col style="display: flex; justify-content: center; align-items: center; height: 100%;">
+        <el-col style="display: flex; justify-content: center; align-items: center;">
+          <el-select v-model="documentType" placeholder="Select" style="width: 100px">
+            <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </el-col>
+        <el-col v-if="documentType == 'Text'"
+          style="display: flex; justify-content: center; align-items: center; height: 100%;">
           <el-autocomplete style="margin: 0 0;" v-model="search_state" :fetch-suggestions="querySearch" clearable
-            type="textarea" :autosize="{ minRows: 1, maxRows: 20 }" class="inline-input search-bar w-50vw" size="large"
+            type="input" class="inline-input search-bar w-50vw" size="large"
             placeholder="Type any words freely. Use Ctrl + Enter to submit." :disabled="submitLoading"
             @keyup.ctrl.enter="submit" />
+        </el-col>
+        <el-col v-else-if="documentType == 'Article'"
+          style="display: flex; justify-content: center; align-items: center; height: 100%;">
+          <el-input type="textarea" style="margin: 0 0; width: 50vw;" input-style="padding: 20px 20px;" resize="none"
+            :rows="15" v-model="search_state" size="large" placeholder="Type articles freely. Use Ctrl + Enter to submit."
+            @keyup.ctrl.enter="submit">
+          </el-input>
+        </el-col>
+        <el-col v-else-if="documentType == 'File'"
+          style="display: flex; justify-content: center; align-items: center; height: 100%;">
+          <el-upload accept=".txt" action="/api/message/file" :http-request="handleUpload" ref="upload"
+            :auto-upload="false" drag :limit="1" :on-exceed="handleExceed" style="width: 400px;">
+            <el-icon><upload-filled /></el-icon>
+            <div>
+              Drop file here or click to upload
+            </div>
+          </el-upload>
         </el-col>
         <el-col style="display: flex; justify-content: center; align-items: center;">
           <el-button id="submit-button" :loading="submitLoading" style="margin: 0 0;" type="primary" plain

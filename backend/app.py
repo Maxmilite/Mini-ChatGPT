@@ -1,3 +1,4 @@
+import os
 import sys
 import time
 from flask import session
@@ -180,6 +181,35 @@ def getMessage():
     if querySession(session['username']) == -1:
         flask.abort(403)
     message = request.args.get('message', '').replace(
+        "?", "").replace(".", "").replace("？", "")
+    cursor.execute(
+        "SELECT answer FROM message_table WHERE question=\"" + message + "\"")
+    data = cursor.fetchone()
+    if (data != None):
+        updatePopularity(message)
+        storeMessage(getUserID(session.get("username")), message, data[0])
+        return data[0]
+    else:
+        return getNLPMessage(message)
+
+
+@app.route('/message/file', methods=['POST'])
+def getFileMessage():
+    if not (session.get("username")):
+        flask.abort(401)
+    if querySession(session['username']) == -1:
+        flask.abort(403)
+    file = request.files.get('file')
+    if file is None:
+        return 'File is not uploaded.'
+    file.save("Text.txt")
+    message = ""
+    with open("Text.txt", "r+", encoding="UTF-8") as f:
+        list = f.readlines()
+        for i in list:
+            message += i
+    os.remove("Text.txt")
+    message = message.replace(
         "?", "").replace(".", "").replace("？", "")
     cursor.execute(
         "SELECT answer FROM message_table WHERE question=\"" + message + "\"")
